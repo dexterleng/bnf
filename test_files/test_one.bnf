@@ -1,0 +1,3 @@
+<A> ::= LBRACE <B> RBRACE
+<B> ::= <B> <C> | EPSILON
+<C> ::= <C> DOT | EPSILON
