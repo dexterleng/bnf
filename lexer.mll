@@ -9,15 +9,16 @@
 let assign = "::="
 
 let letter = ['a'-'z' 'A'-'Z']
-let word = letter+
+let letterWithUnderscore = ['a'-'z' 'A'-'Z' '_']
+let name = letter letterWithUnderscore*
 
 let whitespace = [' ' '\t']
 let newline = '\n'
 
 let or = '|'
 
-let terminal_name = word
-let non_terminal_name = '<' word '''* '>'
+let terminal_name = name
+let non_terminal_name = '<' name '''* '>'
 
 let non_terminal_expr = non_terminal_name assign (terminal_name | non_terminal_name)+ newline
 
