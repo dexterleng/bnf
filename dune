@@ -1,4 +1,4 @@
 (executables
- (names bnf lexer calc)
+ (names bnf lexer parse_stdin)
  (libraries core)
  (preprocess (pps ppx_jane -allow-unannotated-ignores)))

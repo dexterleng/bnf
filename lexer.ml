@@ -2,7 +2,7 @@
  
   open Parser
 
-  exception Eof
+  (* exception Eof *)
 
   let line_number = ref 1
 
@@ -195,7 +195,7 @@ let
 
   | 6 ->
 # 31 "lexer.mll"
-                   ( raise Eof )
+                   ( EOF )
 # 200 "lexer.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf;
