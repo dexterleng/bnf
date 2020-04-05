@@ -1,8 +1,40 @@
-type ('a, 'b) either = Left of 'a | Right of 'b
-type non_terminal = NonTerminal of string
-type terminal = Terminal of string 
-type lhs = non_terminal
-type rhs = (non_terminal, terminal) either list
-type assignment = 
-    Assignment of lhs * rhs
-  | Nothing
+type non_terminal = string [@@deriving show]
+type terminal = string [@@deriving show]
+
+type term =
+  | NonTerminal of non_terminal
+  | Terminal of terminal [@@deriving show]
+
+type
+
+syntax = line list [@@deriving show]
+
+and
+
+line = assignment option [@@deriving show]
+
+and
+
+assignment = { lhs: non_terminal; rhs: expr  } [@@deriving show]
+
+and
+
+expr = or_expr [@@deriving show]
+
+and
+
+or_expr =
+  | OR_EXPR of sequential_expr * or_expr
+  | OR_EXPR_BASE of sequential_expr [@@deriving show]
+
+and
+
+sequential_expr =
+  | SEQUENTIAL_EXPR of primary_expr * sequential_expr
+  | SEQUENTIAL_EXPR_BASE of primary_expr [@@deriving show]
+
+and
+
+primary_expr =
+  | PRIMARY_EXPR of term
+  | PRIMARY_PARENTHESIZED_EXPR of expr [@@deriving show]

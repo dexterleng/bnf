@@ -8,36 +8,42 @@
 %token OR
 %token ASSIGN
 %token NEWLINE
-%start main             /* the entry point */
-%type <Types.assignment list> main
+%token LBRACE RBRACE
+%start syntax             /* the entry point */
+%type <Types.syntax> syntax
 %%
 
-main:
-  line main { $1::$2 }
+syntax:
+  line syntax { $1::$2 }
   | EOF { [] }
 
 line:
-  assignment NEWLINE { $1 }
-  | NEWLINE { Types.Nothing }
+  assignment NEWLINE { Some($1) }
+  | NEWLINE { None }
 ;
 
 assignment:
-  NON_TERMINAL ASSIGN expr { Types.Assignment(Types.NonTerminal($1), $3) }
+  NON_TERMINAL ASSIGN expr { { lhs = $1; rhs = $3 } }
 ;
 
 expr:
-  either_terminal exprP { $1::$2 }
+  or_expr { $1 }
 ;
 
-exprP:
-  epsilon { [] }
-  | either_terminal exprP { $1::$2 }
+or_expr:
+  sequential_expr OR or_expr { Types.OR_EXPR($1, $3) }
+  | sequential_expr { Types.OR_EXPR_BASE($1) }
+
+sequential_expr:
+  primary_expr sequential_expr { Types.SEQUENTIAL_EXPR($1, $2) }
+  | primary_expr { Types.SEQUENTIAL_EXPR_BASE($1) }
 ;
 
-either_terminal:
-  NON_TERMINAL { Types.Left(Types.NonTerminal $1) }
- | TERMINAL { Types.Right(Types.Terminal $1) }
-;
+primary_expr:
+  term { Types.PRIMARY_EXPR($1) }
+  | LBRACE expr RBRACE { Types.PRIMARY_PARENTHESIZED_EXPR($2) }
 
-epsilon:
-  { [] }
+term:
+  NON_TERMINAL { Types.NonTerminal($1) }
+ | TERMINAL { Types.Terminal($1) }
+;

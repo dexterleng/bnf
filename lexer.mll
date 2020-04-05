@@ -28,5 +28,8 @@ rule token = parse
   | or              { OR }
   | terminal_name as name            { TERMINAL name }
   | non_terminal_name as name    { NON_TERMINAL (String.sub name 1 ((String.length name) - 2)) }
+  | '(' { LBRACE }
+  | ')' { RBRACE }
+  | '|' { OR }
   | eof		          { EOF }
 

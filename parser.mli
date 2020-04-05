@@ -5,6 +5,8 @@ type token =
   | OR
   | ASSIGN
   | NEWLINE
+  | LBRACE
+  | RBRACE
 
-val main :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Types.assignment list
+val syntax :
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Types.syntax
