@@ -1,0 +1,4 @@
+<E> ::= <T> <X>
+<T> ::= LBRACE <E> RBRACE | INT <Y>
+<X> ::= PLUS <E> | #e
+<Y> ::= MULTIPLY <T> | #e

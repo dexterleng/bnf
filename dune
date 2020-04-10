@@ -1,4 +1,4 @@
 (executables
- (names bnf lexer parse_stdin)
+ (names bnf lexer parse_stdin first)
  (libraries core)
  (preprocess (pps ppx_jane -allow-unannotated-ignores ppx_deriving.show ppx_deriving.ord)))
