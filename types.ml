@@ -3,7 +3,8 @@ type terminal = string [@@deriving show]
 
 type term =
   | NonTerminal of non_terminal
-  | Terminal of terminal [@@deriving show]
+  | Terminal of terminal
+  | Epsilon [@@deriving show]
 
 type
 

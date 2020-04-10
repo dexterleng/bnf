@@ -1,6 +1,7 @@
 type token =
   | NON_TERMINAL of (string)
   | TERMINAL of (string)
+  | EPSILON
   | EOF
   | OR
   | ASSIGN

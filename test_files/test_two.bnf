@@ -1,3 +1,4 @@
 <A> ::= LBRACE <B> RBRACE
 <B> ::= <B> <C>
 <C> ::= <C> DOT
+<D> ::= #e

@@ -4,6 +4,7 @@
 
 /* File parser.mly */
 %token <string> NON_TERMINAL TERMINAL
+%token EPSILON
 %token EOF
 %token OR
 %token ASSIGN
@@ -46,4 +47,5 @@ primary_expr:
 term:
   NON_TERMINAL { Types.NonTerminal($1) }
  | TERMINAL { Types.Terminal($1) }
+ | EPSILON { Types.Epsilon }
 ;
