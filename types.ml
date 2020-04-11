@@ -27,6 +27,23 @@ module FirstSet = Set.Make(FirstSetElement)
 
 let show_first_set s = String.concat ~sep: ", " (List.map (FirstSet.to_list s) ~f:(show_first_set_element))
 
+type follow_set_element =
+  | Terminal of terminal
+  | EndSymbol [@@deriving show, sexp]
+
+module FollowSetElement = struct
+  type t = follow_set_element
+  let compare a b = match (a, b) with
+    | (Terminal(a), Terminal(b)) -> String.compare a b
+    | (Terminal(_), EndSymbol) -> 1
+    | (EndSymbol, Terminal(_)) -> -1
+    | (EndSymbol, EndSymbol) -> 0
+  let sexp_of_t t = sexp_of_follow_set_element t
+  let t_of_sexp t = follow_set_element_of_sexp t
+end
+
+module FollowSet = Set.Make(FollowSetElement)
+
 type
 
 syntax = line list [@@deriving show]
