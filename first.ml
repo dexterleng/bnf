@@ -8,17 +8,19 @@ let find_production (assignments: Types.assignment list) (non_terminal: Types.no
 
 let epsilon_only_set = Types.FirstSet.add Types.FirstSet.empty Epsilon
 
-let rec generate_first_set_primary_expr (lines: Types.assignment list) (primary_expr: Types.primary_expr) =
+let rec generate_first_set_term (lines: Types.assignment list) (term: Types.term) = match term with
+  | NonTerminal(non_terminal) ->
+    let production = find_production lines non_terminal in
+    generate_first_set_assignment lines production
+  | Terminal(terminal) ->
+    Types.FirstSet.add Types.FirstSet.empty (Terminal terminal)
+  | Epsilon -> epsilon_only_set
+
+and
+
+generate_first_set_primary_expr (lines: Types.assignment list) (primary_expr: Types.primary_expr) =
   match primary_expr with
-    | PRIMARY_EXPR(term) -> (
-        match term with
-          | NonTerminal(non_terminal) ->
-            let production = find_production lines non_terminal in
-            generate_first_set_assignment lines production
-          | Terminal(terminal) ->
-            Types.FirstSet.add Types.FirstSet.empty (Terminal terminal)
-          | Epsilon -> epsilon_only_set
-      )
+    | PRIMARY_EXPR(term) -> generate_first_set_term lines term
     | PRIMARY_PARENTHESIZED_EXPR(expr) -> generate_first_set_expr lines expr
 
 and
