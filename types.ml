@@ -6,7 +6,7 @@ type terminal = string [@@deriving show, sexp]
 type term =
   | NonTerminal of non_terminal
   | Terminal of terminal
-  | Epsilon [@@deriving show]
+  | Epsilon [@@deriving show, sexp]
 
 type first_set_element =
   | Terminal of terminal
@@ -23,9 +23,28 @@ module FirstSetElement = struct
   let t_of_sexp t = first_set_element_of_sexp t
 end
 
-module FirstSet = Set.Make(FirstSetElement)
+module FirstSet = Set.Make(FirstSetElement) [@@deriving show]
 
 let show_first_set s = String.concat ~sep: ", " (List.map (FirstSet.to_list s) ~f:(show_first_set_element))
+
+module NonTerminal =
+  struct
+    type t = term
+    let compare a b = match (a, b) with
+      | (NonTerminal(a), NonTerminal(b)) -> String.compare a b
+      | (NonTerminal(_), Epsilon) -> 1
+      | (Epsilon, NonTerminal(_)) -> -1
+      | (Terminal(a), NonTerminal(b)) -> String.compare a b
+      | (NonTerminal(a), Terminal(b)) -> String.compare a b
+      | (Terminal(a), Terminal(b)) -> String.compare a b
+      | (Terminal(_), Epsilon) -> 1
+      | (Epsilon, Terminal(_)) -> -1
+      | (Epsilon, Epsilon) -> 0
+    let sexp_of_t t = sexp_of_term t
+    let t_of_sexp t = term_of_sexp t
+  end
+
+module NonTerminalMap = Map.Make(NonTerminal)
 
 type follow_set_element =
   | Terminal of terminal
@@ -74,6 +93,6 @@ sequential_expr =
 
 and
 
-primary_expr =
+primary_expr =  
   | PRIMARY_EXPR of term
   | PRIMARY_PARENTHESIZED_EXPR of expr [@@deriving show]
