@@ -63,6 +63,8 @@ end
 
 module FollowSet = Set.Make(FollowSetElement)
 
+let show_follow_set s = String.concat ~sep: ", " (List.map (FollowSet.to_list s) ~f:(show_follow_set_element))
+
 type
 
 syntax = line list [@@deriving show]
