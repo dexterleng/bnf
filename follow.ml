@@ -81,30 +81,15 @@ generate_follow_set_seq_expr
   (follow_set_map: FollowSet.t NonTerminalMap.t)
   (next_follow: FollowSet.t)
   = match seq_expr with
-    | SEQUENTIAL_EXPR_BASE(primary_expr) ->
-      generate_follow_set_pri_expr
-        primary_expr first_set_map follow_set_map next_follow
-    | SEQUENTIAL_EXPR(primary_expr, seq_expr) ->
+    | SEQUENTIAL_EXPR_BASE term ->
+      generate_follow_set_term
+        term first_set_map follow_set_map next_follow
+    | SEQUENTIAL_EXPR(term, seq_expr) ->
       let result = generate_follow_set_seq_expr
         seq_expr first_set_map follow_set_map next_follow
       in
-      generate_follow_set_pri_expr
-        primary_expr first_set_map result.follow_set_map result.next_follow
-
-and
-
-generate_follow_set_pri_expr
-  (primary_expr: primary_expr)
-  (first_set_map: FirstSet.t NonTerminalMap.t)
-  (follow_set_map: FollowSet.t NonTerminalMap.t)
-  (next_follow: FollowSet.t)
-  = match primary_expr with
-    | PRIMARY_EXPR(term) ->
       generate_follow_set_term
-        term first_set_map follow_set_map next_follow
-    | PRIMARY_PARENTHESIZED_EXPR(expr) ->
-      generate_follow_set_expr
-        expr first_set_map follow_set_map next_follow
+        term first_set_map result.follow_set_map result.next_follow
 
 and
 

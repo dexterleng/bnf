@@ -36,13 +36,9 @@ or_expr:
   | sequential_expr { Types.OR_EXPR_BASE($1) }
 
 sequential_expr:
-  primary_expr sequential_expr { Types.SEQUENTIAL_EXPR($1, $2) }
-  | primary_expr { Types.SEQUENTIAL_EXPR_BASE($1) }
+  term sequential_expr { Types.SEQUENTIAL_EXPR($1, $2) }
+  | term { Types.SEQUENTIAL_EXPR_BASE($1) }
 ;
-
-primary_expr:
-  term { Types.PRIMARY_EXPR($1) }
-  | LBRACE expr RBRACE { Types.PRIMARY_PARENTHESIZED_EXPR($2) }
 
 term:
   NON_TERMINAL { Types.NonTerminal($1) }
