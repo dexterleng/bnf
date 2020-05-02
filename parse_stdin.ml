@@ -6,8 +6,8 @@ let _ =
     let assignments = List.filter_map ~f:(fun x -> x) syntax in
     let first_set_map = First.generate_first_sets assignments in
     let li = Types.NonTerminalMap.to_alist first_set_map in
-    List.iter li ~f:(fun (term, first_set) ->
-        Printf.printf "Term: %s, FirstSet: %s\n" (Types.show_term term) (Types.show_first_set first_set);
+    List.iter li ~f:(fun (term, first_set_of_assignment) ->
+        Printf.printf "Term: %s, FirstSet: %s\n" (Types.show_term term) (Types.show_first_set first_set_of_assignment.union_of_first_sets);
     );
 
     Printf.printf("\n");
