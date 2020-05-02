@@ -23,10 +23,16 @@ let first_of_follow (follow_set: FollowSet.t) =
 let rec
 
 generate_follow_sets (assignments: assignment list) (first_set_map: FirstSet.t NonTerminalMap.t) =
-  let init_map = List.fold_left assignments
-    ~f:(fun map assignment -> NonTerminalMap.set map ~key: (NonTerminal assignment.lhs) ~data: FollowSet.empty)
+  let init_map = List.foldi assignments
+    ~f:(fun index map assignment ->
+      let follow_set =
+        if index = 0 then FollowSet.of_list [EndSymbol;]
+        else FollowSet.empty
+      in
+      NonTerminalMap.set map ~key: (NonTerminal assignment.lhs) ~data: follow_set)
     ~init: NonTerminalMap.empty
   in
+
   let follow_set_map = ref init_map in
   let changed = ref true in
   while !changed do
