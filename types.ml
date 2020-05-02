@@ -90,11 +90,5 @@ or_expr =
 and
 
 sequential_expr =
-  | SEQUENTIAL_EXPR of primary_expr * sequential_expr
-  | SEQUENTIAL_EXPR_BASE of primary_expr [@@deriving show]
-
-and
-
-primary_expr =  
-  | PRIMARY_EXPR of term
-  | PRIMARY_PARENTHESIZED_EXPR of expr [@@deriving show]
+  | SEQUENTIAL_EXPR of term * sequential_expr
+  | SEQUENTIAL_EXPR_BASE of term [@@deriving show]

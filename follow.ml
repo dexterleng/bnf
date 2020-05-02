@@ -23,10 +23,16 @@ let first_of_follow (follow_set: FollowSet.t) =
 let rec
 
 generate_follow_sets (assignments: assignment list) (first_set_map: FirstSet.t NonTerminalMap.t) =
-  let init_map = List.fold_left assignments
-    ~f:(fun map assignment -> NonTerminalMap.set map ~key: (NonTerminal assignment.lhs) ~data: FollowSet.empty)
+  let init_map = List.foldi assignments
+    ~f:(fun index map assignment ->
+      let follow_set =
+        if index = 0 then FollowSet.of_list [EndSymbol;]
+        else FollowSet.empty
+      in
+      NonTerminalMap.set map ~key: (NonTerminal assignment.lhs) ~data: follow_set)
     ~init: NonTerminalMap.empty
   in
+
   let follow_set_map = ref init_map in
   let changed = ref true in
   while !changed do
@@ -81,30 +87,15 @@ generate_follow_set_seq_expr
   (follow_set_map: FollowSet.t NonTerminalMap.t)
   (next_follow: FollowSet.t)
   = match seq_expr with
-    | SEQUENTIAL_EXPR_BASE(primary_expr) ->
-      generate_follow_set_pri_expr
-        primary_expr first_set_map follow_set_map next_follow
-    | SEQUENTIAL_EXPR(primary_expr, seq_expr) ->
+    | SEQUENTIAL_EXPR_BASE term ->
+      generate_follow_set_term
+        term first_set_map follow_set_map next_follow
+    | SEQUENTIAL_EXPR(term, seq_expr) ->
       let result = generate_follow_set_seq_expr
         seq_expr first_set_map follow_set_map next_follow
       in
-      generate_follow_set_pri_expr
-        primary_expr first_set_map result.follow_set_map result.next_follow
-
-and
-
-generate_follow_set_pri_expr
-  (primary_expr: primary_expr)
-  (first_set_map: FirstSet.t NonTerminalMap.t)
-  (follow_set_map: FollowSet.t NonTerminalMap.t)
-  (next_follow: FollowSet.t)
-  = match primary_expr with
-    | PRIMARY_EXPR(term) ->
       generate_follow_set_term
-        term first_set_map follow_set_map next_follow
-    | PRIMARY_PARENTHESIZED_EXPR(expr) ->
-      generate_follow_set_expr
-        expr first_set_map follow_set_map next_follow
+        term first_set_map result.follow_set_map result.next_follow
 
 and
 

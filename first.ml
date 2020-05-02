@@ -32,23 +32,15 @@ and
 
 generate_first_set_seq_expr (lhs: non_terminal) (seq_expr: sequential_expr) (first_set_map: FirstSet.t NonTerminalMap.t) =
   match seq_expr with
-    | SEQUENTIAL_EXPR(primary_expr, sequential_expr) ->
+    | SEQUENTIAL_EXPR(term, sequential_expr) ->
       (* UNION until non-epsilonable *)
-      let (primary_first_set_map, epsilonable) = generate_first_set_primary_expr lhs primary_expr first_set_map in
+      let (term_first_set_map, epsilonable) = generate_first_set_term lhs term first_set_map in
       if epsilonable then
-        generate_first_set_seq_expr lhs sequential_expr primary_first_set_map
+        generate_first_set_seq_expr lhs sequential_expr term_first_set_map
       else
-        (primary_first_set_map, false)
-    | SEQUENTIAL_EXPR_BASE(primary_expr) ->
-      generate_first_set_primary_expr lhs primary_expr first_set_map
-
-and
-
-
-generate_first_set_primary_expr (lhs: non_terminal) (primary_expr: primary_expr) (first_set_map: FirstSet.t NonTerminalMap.t) =
-  match primary_expr with
-    | PRIMARY_EXPR(term) -> generate_first_set_term lhs term first_set_map
-    | PRIMARY_PARENTHESIZED_EXPR(expr) -> generate_first_set_expr lhs expr first_set_map
+        (term_first_set_map, false)
+    | SEQUENTIAL_EXPR_BASE(term) ->
+      generate_first_set_term lhs term first_set_map
 
 and
 
