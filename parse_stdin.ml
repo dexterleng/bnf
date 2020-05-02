@@ -18,4 +18,12 @@ let _ =
         Printf.printf "Term: %s, FollowSet: %s\n" (Types.show_term term) (Types.show_follow_set follow_set);
     );
 
+    let parse_table = Parse_table.generate_parse_table assignments first_set_map follow_set_map in
+
+    let li3 = Parse_table.ParseTableMap.to_alist parse_table in
+        List.iter li3 ~f:(fun (key, seq_expr) ->
+        Printf.printf "Key: %s, SeqExpr: %s\n" (Parse_table.ParseTableKey.show key) (Types.show_sequential_expr seq_expr);
+    );
+
+
     Out_channel.flush stdout;

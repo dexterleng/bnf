@@ -1,0 +1,5 @@
+<E> ::= <T> <E_PRIME>
+<E_PRIME> ::= PLUS <T> <E_PRIME> | #e
+<T> ::= <F> <T_PRIME>
+<T_PRIME> ::= ASTERISK <F> <T_PRIME> | #e
+<F> ::= LBRACE <E> RBRACE | ID
