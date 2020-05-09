@@ -17,7 +17,7 @@ let rec seq_expr_to_term_list seq_expr = match seq_expr with
     | SEQUENTIAL_EXPR_BASE(term) -> [term]
     | SEQUENTIAL_EXPR(term, seq_expr) -> term::seq_expr_to_term_list(seq_expr)
 
-let rec parse (parse_table: Types.sequential_expr Parse_table.ParseTableMap.t) (tokens: string list) (symbol: hello) =
+let rec parse (parse_table: Types.epsilonable_sequential_expr Parse_table.ParseTableMap.t) (tokens: string list) (symbol: hello) =
     match symbol with
         | EndSymbol -> (Leaf, tokens)
         | Terminal(terminal) ->
@@ -30,25 +30,23 @@ let rec parse (parse_table: Types.sequential_expr Parse_table.ParseTableMap.t) (
             else
 
             let first_token = List.hd_exn tokens in
-            let seq_expr = Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = Terminal first_token; } in
+            let eps_seq_expr = Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = Terminal first_token; } in
 
-            print_endline non_terminal;
-            print_endline first_token;
+            match eps_seq_expr with
+                | Epsilon -> (NonTerminalNode { non_terminal = non_terminal; children = []; }, tokens)
+                | SeqExpr(seq_expr) ->
+                    let (children_rev, tokens) = List.fold (seq_expr_to_term_list seq_expr) ~init:([], tokens) ~f:(fun (children_rev, tokens) term -> 
+                        match term with
+                            | NonTerminal(non_terminal) ->
+                                let (node, tokens) = parse parse_table tokens (NonTerminal non_terminal) in
+                                (node::children_rev, tokens)
+                            | Terminal(terminal) ->
+                                let (node, tokens) = parse parse_table tokens (Terminal terminal) in
+                                (node::children_rev, tokens)
+                        )
+                    in
 
-            let (children_rev, tokens) = List.fold (seq_expr_to_term_list seq_expr) ~init:([], tokens) ~f:(fun (children_rev, tokens) term -> 
-                match term with
-                    | NonTerminal(non_terminal) ->
-                        let (node, tokens) = parse parse_table tokens (NonTerminal non_terminal) in
-                        (node::children_rev, tokens)
-                    | Terminal(terminal) ->
-                        let (node, tokens) = parse parse_table tokens (Terminal terminal) in
-                        (node::children_rev, tokens)
-                    | Epsilon ->
-                        (children_rev, tokens)
-                )
-            in
-
-            (NonTerminalNode { non_terminal = non_terminal; children = List.rev children_rev; }, tokens)
+                    (NonTerminalNode { non_terminal = non_terminal; children = List.rev children_rev; }, tokens)
 
 let _ =
     let lexbuf = Lexing.from_channel In_channel.stdin in
@@ -72,7 +70,7 @@ let _ =
 
     let li3 = Parse_table.ParseTableMap.to_alist parse_table in
         List.iter li3 ~f:(fun (key, seq_expr) ->
-        Printf.printf "Key: %s, SeqExpr: %s\n" (Parse_table.ParseTableKey.show key) (Types.show_sequential_expr seq_expr);
+        Printf.printf "Key: %s, SeqExpr: %s\n" (Parse_table.ParseTableKey.show key) (Types.show_epsilonable_sequential_expr seq_expr);
     );
 
     let input_tokens = [

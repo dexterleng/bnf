@@ -21,8 +21,8 @@ end
 
 module ParseTableMap = Map.Make(ParseTableKey)
 
-let rec or_expr_to_seq_expr_list (or_expr: or_expr) = match or_expr with
-  | OR_EXPR(seq_expr, or_expr) -> seq_expr::(or_expr_to_seq_expr_list or_expr)
+let rec or_expr_to_eps_seq_expr_list (or_expr: or_expr) = match or_expr with
+  | OR_EXPR(eps_seq_expr, or_expr) -> eps_seq_expr::(or_expr_to_eps_seq_expr_list or_expr)
   | OR_EXPR_BASE(seq_expr) -> [seq_expr]
 
 let generate_parse_table
@@ -36,16 +36,16 @@ let generate_parse_table
     let lhs = assignment.lhs in  
     let rhs = assignment.rhs in
 
-    let seq_exprs = or_expr_to_seq_expr_list rhs in
+    let eps_seq_exprs = or_expr_to_eps_seq_expr_list rhs in
     let seq_expr_first_sets = (NonTerminalMap.find_exn first_set_map (NonTerminal lhs)).first_sets in
 
     (* asserting eql length as a sanity check *)
-    let zipped_seq_expr_with_first_sets = List.zip_exn seq_exprs seq_expr_first_sets in
+    let zipped_seq_expr_with_first_sets = List.zip_exn eps_seq_exprs seq_expr_first_sets in
 
-    List.fold_left zipped_seq_expr_with_first_sets ~init: parse_table ~f:(fun parse_table (seq_expr, seq_expr_first_set) ->
+    List.fold_left zipped_seq_expr_with_first_sets ~init: parse_table ~f:(fun parse_table (eps_seq_expr, seq_expr_first_set) ->
       (* for each terminal t in FIRST(seq), add lhs -> seq to table[lhs, t] *)
       let parse_table = FirstSet.fold seq_expr_first_set ~init: parse_table ~f:(fun parse_table first_set_element -> match first_set_element with
-        | Terminal terminal -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = Terminal terminal; }) ~data: seq_expr
+        | Terminal terminal -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = Terminal terminal; }) ~data: eps_seq_expr
         | Epsilon -> parse_table
       ) in
 
@@ -59,8 +59,8 @@ let generate_parse_table
           let follow_of_lhs = NonTerminalMap.find_exn follow_set_map (NonTerminal lhs) in
 
           FollowSet.fold follow_of_lhs ~init: parse_table ~f:(fun parse_table follow_set_element -> match follow_set_element with
-            | Terminal terminal -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = Terminal terminal; }) ~data: seq_expr
-            | EndSymbol -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = EndSymbol; }) ~data: seq_expr
+            | Terminal terminal -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = Terminal terminal; }) ~data: eps_seq_expr
+            | EndSymbol -> ParseTableMap.add_exn parse_table ~key: ({ lhs = lhs; terminal_or_end_symbol = EndSymbol; }) ~data: eps_seq_expr
           )
         else parse_table
       in
