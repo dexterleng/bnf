@@ -42,14 +42,21 @@ and
 
 generate_first_set_or_expr (or_expr: or_expr) (seq_expr_first_sets_rev: FirstSet.t list) (first_set_map: first_set_of_assignment NonTerminalMap.t) =
   match or_expr with
-    | OR_EXPR(sequential_expr, or_expr) ->
-      let seq_first_set = generate_first_set_seq_expr sequential_expr first_set_map in
+    | OR_EXPR(eps_seq_expr, or_expr) ->
+      let seq_first_set = generate_first_set_epsilonable_seq_expr eps_seq_expr first_set_map in
       generate_first_set_or_expr or_expr (seq_first_set::seq_expr_first_sets_rev) first_set_map
-    | OR_EXPR_BASE(sequential_expr) ->
-      let seq_first_set = generate_first_set_seq_expr sequential_expr first_set_map in
+    | OR_EXPR_BASE(eps_seq_expr) ->
+      let seq_first_set = generate_first_set_epsilonable_seq_expr eps_seq_expr first_set_map in
       let seq_expr_first_sets = List.rev (seq_first_set::seq_expr_first_sets_rev) in
       let unions_of_first_sets = FirstSet.union_list seq_expr_first_sets in
       { first_sets = seq_expr_first_sets; union_of_first_sets = unions_of_first_sets }
+
+and
+
+generate_first_set_epsilonable_seq_expr (eps_seq_expr: epsilonable_sequential_expr) (first_set_map: first_set_of_assignment NonTerminalMap.t) =
+  match eps_seq_expr with
+    | Epsilon -> epsilon_only_set
+    | SeqExpr(seq_expr) -> generate_first_set_seq_expr seq_expr first_set_map
 
 and
 
@@ -79,5 +86,3 @@ generate_first_set_term (term: term) (first_set_map: first_set_of_assignment Non
   | Terminal(terminal) ->
     let terminal_first_set = FirstSet.add (FirstSet.empty) (Terminal terminal) in
     terminal_first_set
-  | Epsilon ->
-    epsilon_only_set

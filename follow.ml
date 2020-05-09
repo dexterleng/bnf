@@ -67,24 +67,39 @@ and
 
 generate_follow_set_or_expr
   (or_expr: or_expr)
-  ((first_set_map: first_set_of_assignment NonTerminalMap.t))
+  (first_set_map: first_set_of_assignment NonTerminalMap.t)
   (follow_set_map: FollowSet.t NonTerminalMap.t)
   (next_follow: FollowSet.t)
   = match or_expr with
-    | OR_EXPR_BASE(seq_expr) ->
-      generate_follow_set_seq_expr
-        seq_expr first_set_map follow_set_map next_follow
-    | OR_EXPR(seq_expr, or_expr) ->
+    | OR_EXPR_BASE(eps_seq_expr) ->
+      generate_follow_set_eps_seq_expr
+        eps_seq_expr first_set_map follow_set_map next_follow
+    | OR_EXPR(eps_seq_expr, or_expr) ->
       let result = generate_follow_set_or_expr
         or_expr first_set_map follow_set_map next_follow
       in
-      generate_follow_set_seq_expr
-        seq_expr first_set_map result.follow_set_map next_follow
+      generate_follow_set_eps_seq_expr
+        eps_seq_expr first_set_map result.follow_set_map next_follow
+and
+
+generate_follow_set_eps_seq_expr
+  (eps_seq_expr: epsilonable_sequential_expr)
+  (first_set_map: first_set_of_assignment NonTerminalMap.t)
+  (follow_set_map: FollowSet.t NonTerminalMap.t)
+  (next_follow: FollowSet.t)
+  = match eps_seq_expr with
+    | Epsilon ->
+        {
+          follow_set_map;
+          next_follow;
+        }
+    | SeqExpr(seq_expr) -> generate_follow_set_seq_expr seq_expr first_set_map follow_set_map next_follow
+
 and
 
 generate_follow_set_seq_expr
   (seq_expr: sequential_expr)
-  ((first_set_map: first_set_of_assignment NonTerminalMap.t))
+  (first_set_map: first_set_of_assignment NonTerminalMap.t)
   (follow_set_map: FollowSet.t NonTerminalMap.t)
   (next_follow: FollowSet.t)
   = match seq_expr with
@@ -128,10 +143,5 @@ generate_follow_set_term
       {
         follow_set_map = new_follow_set_map;
         next_follow = new_next_follow;
-      }
-    | Epsilon ->
-      {
-        follow_set_map;
-        next_follow;
       }
       
