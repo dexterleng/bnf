@@ -1,4 +1,54 @@
 open Core
+open Types
+
+type hello =
+  | Terminal of terminal
+  | NonTerminal of non_terminal
+  | EndSymbol [@@deriving show, sexp]
+
+type ast_node =
+    NonTerminalNode of { non_terminal: non_terminal; children: ast_node list; }
+    | TerminalNode of terminal
+    | Leaf [@@deriving show, sexp]
+
+exception ParseError of string
+
+let rec seq_expr_to_term_list seq_expr = match seq_expr with
+    | SEQUENTIAL_EXPR_BASE(term) -> [term]
+    | SEQUENTIAL_EXPR(term, seq_expr) -> term::seq_expr_to_term_list(seq_expr)
+
+let rec parse (parse_table: Types.sequential_expr Parse_table.ParseTableMap.t) (tokens: string list) (symbol: hello) =
+    match symbol with
+        | EndSymbol -> (Leaf, tokens)
+        | Terminal(terminal) ->
+            if terminal = List.hd_exn tokens then
+                ((TerminalNode terminal), (List.tl_exn tokens))
+            else
+                raise (ParseError "dummy")
+        | NonTerminal(non_terminal) ->
+            if non_terminal = "GRAMMAR_PRIME" then (Leaf, tokens)
+            else
+
+            let first_token = List.hd_exn tokens in
+            let seq_expr = Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = Terminal first_token; } in
+
+            print_endline non_terminal;
+            print_endline first_token;
+
+            let (children_rev, tokens) = List.fold (seq_expr_to_term_list seq_expr) ~init:([], tokens) ~f:(fun (children_rev, tokens) term -> 
+                match term with
+                    | NonTerminal(non_terminal) ->
+                        let (node, tokens) = parse parse_table tokens (NonTerminal non_terminal) in
+                        (node::children_rev, tokens)
+                    | Terminal(terminal) ->
+                        let (node, tokens) = parse parse_table tokens (Terminal terminal) in
+                        (node::children_rev, tokens)
+                    | Epsilon ->
+                        (children_rev, tokens)
+                )
+            in
+
+            (NonTerminalNode { non_terminal = non_terminal; children = List.rev children_rev; }, tokens)
 
 let _ =
     let lexbuf = Lexing.from_channel In_channel.stdin in
@@ -25,5 +75,13 @@ let _ =
         Printf.printf "Key: %s, SeqExpr: %s\n" (Parse_table.ParseTableKey.show key) (Types.show_sequential_expr seq_expr);
     );
 
+    let input_tokens = [
+        "NON_TERMINAL"; "ASSIGNMENT_SYMBOL"; "NON_TERMINAL"; "TERMINAL"; "OR"; "TERMINAL"; "NEWLINE";
+    ]
+    in
+
+    let (ast, _) = parse parse_table input_tokens (NonTerminal "GRAMMAR") in
+
+    print_endline (show_ast_node ast);
 
     Out_channel.flush stdout;
