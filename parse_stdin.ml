@@ -6,6 +6,10 @@ type hello =
   | NonTerminal of non_terminal
   | EndSymbol [@@deriving show, sexp]
 
+type token =
+    | Terminal of terminal
+    | EndSymbol [@@deriving show, sexp]
+
 type ast_node =
     NonTerminalNode of { non_terminal: non_terminal; children: ast_node list; }
     | TerminalNode of terminal
@@ -17,25 +21,29 @@ let rec seq_expr_to_term_list seq_expr = match seq_expr with
     | SEQUENTIAL_EXPR_BASE(term) -> [term]
     | SEQUENTIAL_EXPR(term, seq_expr) -> term::seq_expr_to_term_list(seq_expr)
 
-let rec parse (parse_table: Types.epsilonable_sequential_expr Parse_table.ParseTableMap.t) (tokens: string list) (symbol: hello) =
-    match symbol with
-        | EndSymbol -> (Leaf, tokens)
-        | Terminal(terminal) ->
-            if terminal = List.hd_exn tokens then
-                ((TerminalNode terminal), (List.tl_exn tokens))
+let rec parse (parse_table: Types.epsilonable_sequential_expr Parse_table.ParseTableMap.t) (tokens: token list) (symbol: hello) =
+    match (symbol, tokens) with
+        | (EndSymbol, [EndSymbol]) -> (Leaf, [EndSymbol])
+        | (EndSymbol, _) -> raise (ParseError "expected end symbol")
+        | (Terminal(terminal), Terminal(hd_token)::tokens) ->
+            if terminal = hd_token then
+                ((TerminalNode terminal), tokens)
             else
-                raise (ParseError "dummy")
-        | NonTerminal(non_terminal) ->
-            if non_terminal = "GRAMMAR_PRIME" then (Leaf, tokens)
-            else
+                raise (ParseError "terminal does not match head token")
+        | (Terminal(_), _) -> raise (ParseError "ran out of input matching a terminal")
+        | (NonTerminal(non_terminal), hd_token::tl_tokens) ->
+            let eps_seq_expr = match hd_token with
+                | Terminal(hd_token) -> 
+                    let () = print_endline non_terminal in
+                    let () = print_endline hd_token in
+                    Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = Terminal hd_token; }
+                | EndSymbol -> Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = EndSymbol; }
+            in
 
-            let first_token = List.hd_exn tokens in
-            let eps_seq_expr = Parse_table.ParseTableMap.find_exn parse_table { lhs = non_terminal; terminal_or_end_symbol = Terminal first_token; } in
-
-            match eps_seq_expr with
-                | Epsilon -> (NonTerminalNode { non_terminal = non_terminal; children = []; }, tokens)
+            let node = match eps_seq_expr with
+                | Epsilon -> (NonTerminalNode { non_terminal = non_terminal; children = []; }, hd_token::tl_tokens)
                 | SeqExpr(seq_expr) ->
-                    let (children_rev, tokens) = List.fold (seq_expr_to_term_list seq_expr) ~init:([], tokens) ~f:(fun (children_rev, tokens) term -> 
+                    let (children_rev, tokens) = List.fold (seq_expr_to_term_list seq_expr) ~init:([], hd_token::tl_tokens) ~f:(fun (children_rev, tokens) term -> 
                         match term with
                             | NonTerminal(non_terminal) ->
                                 let (node, tokens) = parse parse_table tokens (NonTerminal non_terminal) in
@@ -45,8 +53,10 @@ let rec parse (parse_table: Types.epsilonable_sequential_expr Parse_table.ParseT
                                 (node::children_rev, tokens)
                         )
                     in
-
                     (NonTerminalNode { non_terminal = non_terminal; children = List.rev children_rev; }, tokens)
+            in
+            node
+        | (NonTerminal(_), _) -> raise (ParseError "")
 
 let _ =
     let lexbuf = Lexing.from_channel In_channel.stdin in
@@ -74,7 +84,7 @@ let _ =
     );
 
     let input_tokens = [
-        "NON_TERMINAL"; "ASSIGNMENT_SYMBOL"; "NON_TERMINAL"; "TERMINAL"; "OR"; "TERMINAL"; "NEWLINE";
+        Terminal "NON_TERMINAL"; Terminal "ASSIGNMENT_SYMBOL"; Terminal "NON_TERMINAL"; Terminal "TERMINAL"; Terminal "OR"; Terminal "TERMINAL"; Terminal "NEWLINE"; EndSymbol;
     ]
     in
 
