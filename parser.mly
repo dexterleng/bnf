@@ -32,8 +32,12 @@ expr:
 ;
 
 or_expr:
-  sequential_expr OR or_expr { Types.OR_EXPR($1, $3) }
-  | sequential_expr { Types.OR_EXPR_BASE($1) }
+  epsilonable_sequential_expr OR or_expr { Types.OR_EXPR($1, $3) }
+  | epsilonable_sequential_expr { Types.OR_EXPR_BASE($1) }
+
+epsilonable_sequential_expr:
+  sequential_expr { Types.SeqExpr($1) }
+  | EPSILON { Types.Epsilon }
 
 sequential_expr:
   term sequential_expr { Types.SEQUENTIAL_EXPR($1, $2) }
@@ -43,5 +47,4 @@ sequential_expr:
 term:
   NON_TERMINAL { Types.NonTerminal($1) }
  | TERMINAL { Types.Terminal($1) }
- | EPSILON { Types.Epsilon }
 ;

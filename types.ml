@@ -5,8 +5,7 @@ type terminal = string [@@deriving show, sexp]
 
 type term =
   | NonTerminal of non_terminal
-  | Terminal of terminal
-  | Epsilon [@@deriving show, sexp]
+  | Terminal of terminal [@@deriving show, sexp]
 
 type first_set_element =
   | Terminal of terminal
@@ -32,14 +31,9 @@ module NonTerminal =
     type t = term
     let compare a b = match (a, b) with
       | (NonTerminal(a), NonTerminal(b)) -> String.compare a b
-      | (NonTerminal(_), Epsilon) -> 1
-      | (Epsilon, NonTerminal(_)) -> -1
       | (Terminal(a), NonTerminal(b)) -> String.compare a b
       | (NonTerminal(a), Terminal(b)) -> String.compare a b
       | (Terminal(a), Terminal(b)) -> String.compare a b
-      | (Terminal(_), Epsilon) -> 1
-      | (Epsilon, Terminal(_)) -> -1
-      | (Epsilon, Epsilon) -> 0
     let sexp_of_t t = sexp_of_term t
     let t_of_sexp t = term_of_sexp t
   end
@@ -84,8 +78,14 @@ expr = or_expr [@@deriving show]
 and
 
 or_expr =
-  | OR_EXPR of sequential_expr * or_expr
-  | OR_EXPR_BASE of sequential_expr [@@deriving show]
+  | OR_EXPR of epsilonable_sequential_expr * or_expr
+  | OR_EXPR_BASE of epsilonable_sequential_expr [@@deriving show]
+
+and
+
+epsilonable_sequential_expr =
+  | Epsilon
+  | SeqExpr of sequential_expr [@@deriving show]
 
 and
 
